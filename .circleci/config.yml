@@ -19,27 +19,29 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-     
-      # build Docker image
       - run: 
           name: Building Docker Image      
           command: |
             tag=0.0.$CIRCLE_BUILD_NUM
             docker build -t $DOCKER_USER/eg.identity.management:$tag -f ./deployment/Dockerfile .
-      
-      # push Docker image    
-      - run: 
-            name: Pushing Docker Image
-            command: |
-             echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-             tag=0.0.$CIRCLE_BUILD_NUM
-             docker push $DOCKER_USER/eg.identity.management:$tag
-      
-      # everything is ok
-      - run:
-          name: "Everything executed"
-          command: "echo Steps were successfully executed!"
 
+  # Add steps to the job
+  # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+  deploy:    
+    docker:
+      - image: cimg/base:stable
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS  
+    steps:
+      - setup_remote_docker
+      - run: 
+          name: Pushing Docker Image
+          command: |
+            echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+            tag=0.0.$CIRCLE_BUILD_NUM
+            docker push $DOCKER_USER/eg.identity.management:$tag
+       
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
@@ -47,3 +49,10 @@ workflows:
     jobs:
       - build:
           context: Main 
+      - deploy:
+          context: Main
+          requires: 
+            - build
+          filters:
+            branches:
+              only: main
