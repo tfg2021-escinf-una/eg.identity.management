@@ -9,22 +9,33 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: cimg/base:stable
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
+      
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
       - setup_remote_docker
-      # build and push Docker image
-
-      - run: |
-          TAG=0.1.$CIRCLE_BUILD_NUM
-          docker build -t eg.identity.management:$TAG -f ./deployment/Dockerfile .
-          docker push eg.identity.management:$TAG
-
+     
+      # build Docker image
+      - run: 
+          name: Building Docker Image      
+          command: |
+            tag=0.0.$CIRCLE_BUILD_NUM
+            docker build -t $DOCKER_USER/eg.identity.management:$tag -f ./deployment/Dockerfile .
+      
+      # push Docker image    
+      - run: 
+            name: Pushing Docker Image
+            command: |
+             echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+             tag=0.0.$CIRCLE_BUILD_NUM
+             docker push $DOCKER_USER/eg.identity.management:$tag
+      
+      # everything is ok
       - run:
           name: "Everything executed"
           command: "echo Steps were successfully executed!"
@@ -34,4 +45,5 @@ jobs:
 workflows:
   building-workflow:
     jobs:
-      - build
+      - build:
+          context: Main 
