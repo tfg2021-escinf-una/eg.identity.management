@@ -1,6 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build-env
 ARG Configuration=Release
-ARG BuildNumber=0.0.1
 
 COPY . .
 
