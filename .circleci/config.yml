@@ -2,57 +2,80 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+# Defining the executor. It is going to run per job:
+executors:
+  docker-executor:
+     docker:
+      - image: cimg/base:stable
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+  
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   build:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: cimg/base:stable
-        auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
+   
+    executor: docker-executor
       
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true 
       - run: 
           name: Building Docker Image      
           command: |
-            tag=0.0.$CIRCLE_BUILD_NUM
+            tag=$(date +"%Y.%m.%d").${CIRCLE_BUILD_NUM}
             docker build -t $DOCKER_USER/eg.identity.management:$tag -f ./deployment/Dockerfile .
-
-  # Add steps to the job
-  # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-  deploy:    
-    docker:
-      - image: cimg/base:stable
-        auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS  
+      - run:
+          name: Save Docker Image
+          command: | 
+            mkdir workspace
+            tag=$(date +"%Y.%m.%d").${CIRCLE_BUILD_NUM}
+            docker save -o ./workspace/image.tar $DOCKER_USER/eg.identity.management:$tag
+      - persist_to_workspace:
+            root: workspace 
+            paths:
+              - image.tar           
+  deploy-on-hub:    
+    executor: docker-executor
     steps:
-      - setup_remote_docker
+      - checkout
+      - setup_remote_docker:
+         docker_layer_caching: true
+      - attach_workspace:
+         at: workspace 
       - run: 
           name: Pushing Docker Image
           command: |
+            tag="$(date +"%Y.%m.%d").${CIRCLE_PREVIOUS_BUILD_NUM}"
+            docker load -i ./workspace/image.tar
             echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-            tag=0.0.$CIRCLE_BUILD_NUM
             docker push $DOCKER_USER/eg.identity.management:$tag
-       
+                 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  building-workflow:
+  build-and-deploy:
     jobs:
       - build:
-          context: Main 
-      - deploy:
+          context: Main  
+      - hold:
+         type: approval
+         requires:
+           - build
+         filters:
+           branches:
+            only: main
+      - deploy-on-hub:
           context: Main
           requires: 
+            - hold
             - build
           filters:
-            branches:
+           branches:
               only: main
