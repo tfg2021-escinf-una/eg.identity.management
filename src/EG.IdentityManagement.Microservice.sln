@@ -9,12 +9,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9F7E06F9-100
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", "{12E7282C-0EB6-4ADA-959C-B18F410F9CBB}"
 	ProjectSection(SolutionItems) = preProject
+		..\.circleci\config.yml = ..\.circleci\config.yml
 		..\deployment\Dockerfile = ..\deployment\Dockerfile
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{68E64458-E492-4CAD-9CD1-2FD8E8BBA8E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EG.IdentityManagement.UnitTests", "..\test\EG.IdentityManagement.UnitTests\EG.IdentityManagement.UnitTests.csproj", "{63B02741-0561-4B92-9DD5-DC0294958EF4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EG.IdentityManagement.UnitTests", "..\test\EG.IdentityManagement.UnitTests\EG.IdentityManagement.UnitTests.csproj", "{63B02741-0561-4B92-9DD5-DC0294958EF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

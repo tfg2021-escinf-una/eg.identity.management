@@ -1,0 +1,49 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  build:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: cimg/base:stable
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+      
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - checkout
+      - setup_remote_docker
+     
+      # build Docker image
+      - run: 
+          name: Building Docker Image      
+          command: |
+            tag=0.0.$CIRCLE_BUILD_NUM
+            docker build -t $DOCKER_USER/eg.identity.management:$tag -f ./deployment/Dockerfile .
+      
+      # push Docker image    
+      - run: 
+            name: Pushing Docker Image
+            command: |
+             echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+             tag=0.0.$CIRCLE_BUILD_NUM
+             docker push $DOCKER_USER/eg.identity.management:$tag
+      
+      # everything is ok
+      - run:
+          name: "Everything executed"
+          command: "echo Steps were successfully executed!"
+
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+workflows:
+  building-workflow:
+    jobs:
+      - build:
+          context: Main 
