@@ -35,6 +35,5 @@ namespace EG.IdentityManagement.Microservice.Controllers
         [Route("refresh")]
         public async Task<IActionResult> Refresh()
             => null;
-
     }
 }

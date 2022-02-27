@@ -30,7 +30,9 @@ namespace EG.IdentityManagement.Microservice.Services.Implementations
                                                string password)
         {
             dynamic data = new ExpandoObject();
-            var errors = new List<List<object>>();
+            var errors = new List<object>();
+            string jwtToken = string.Empty;
+            string refreshToken = string.Empty;
 
             var providedUser = await _userManager.FindByEmailAsync(email);
 
@@ -40,45 +42,58 @@ namespace EG.IdentityManagement.Microservice.Services.Implementations
                                                                              password,
                                                                              true,
                                                                              true);
-
                 if (loggingResult.Succeeded)
                 {
-                    string jwtToken = await _userManager.GenerateUserTokenAsync(providedUser,
-                                                                                Constants.AuthTokenProvider,
-                                                                                Constants.TokenPurpose.JWT.ToString());
-
-                    string refreshToken = await _userManager.GenerateUserTokenAsync(providedUser,
-                                                                                    Constants.AuthTokenProvider,
-                                                                                    Constants.TokenPurpose.RefreshToken.ToString());
-
-                    if (!string.IsNullOrEmpty(jwtToken) &&
-                       !string.IsNullOrEmpty(refreshToken))
+                    if (!await _userManager.HasUserAliveJwtToken(providedUser))
                     {
-                        string tokenId = await _userManager.SetJwtTokenAsync(providedUser,
-                                                            Constants.AuthTokenProvider,
-                                                            Constants.TokenPurpose.JWT.ToString(),
-                                                            jwtToken);
+                        jwtToken = await _userManager.GenerateUserTokenAsync(providedUser,
+                                                                             Constants.AuthTokenProvider,
+                                                                             Constants.TokenPurpose.JWT.ToString());
+                        refreshToken = await _userManager.GenerateUserTokenAsync(providedUser,
+                                                                                 Constants.AuthTokenProvider,
+                                                                                 Constants.TokenPurpose.RefreshToken.ToString());
 
-                        await _userManager.SetRefreshTokenAsync(providedUser,
-                                                                Constants.AuthTokenProvider,
-                                                                Constants.TokenPurpose.RefreshToken.ToString(),
-                                                                tokenId,
-                                                                refreshToken);
-
-                        data.jwtToken = jwtToken;
-                        data.refreshToken = refreshToken;
-
-                        return new OkObjectResult(new GenericResponse
+                        if (!string.IsNullOrEmpty(jwtToken) && !string.IsNullOrEmpty(refreshToken))
                         {
-                            Data = data,
-                            Errors = errors,
-                            StatusCode = HttpStatusCode.OK
-                        });
+                            await _userManager.PurgeAuthTokens(providedUser);
+
+                            string tokenId = await _userManager.SetJwtTokenAsync(providedUser,
+                                                                Constants.AuthTokenProvider,
+                                                                Constants.TokenPurpose.JWT.ToString(),
+                                                                jwtToken);
+
+                            await _userManager.SetRefreshTokenAsync(providedUser,
+                                                                    Constants.AuthTokenProvider,
+                                                                    Constants.TokenPurpose.RefreshToken.ToString(),
+                                                                    tokenId,
+                                                                    refreshToken);
+                        }
                     }
+                    else
+                    {
+                        var tupleTokens = _userManager.GetActiveAuthTokens(providedUser);
+                        jwtToken = tupleTokens.Item1;
+                        refreshToken = tupleTokens.Item2;
+                    }
+
+                    data.jwtToken = jwtToken;
+                    data.refreshToken = refreshToken;
+
+                    return new OkObjectResult(new GenericResponse
+                    {
+                        Data = data,
+                        Errors = errors,
+                        StatusCode = HttpStatusCode.OK
+                    });
                 }
             }
 
-            return new OkObjectResult(new { });
+            return new NotFoundObjectResult(new GenericResponse
+            {
+                Data = data,
+                Errors = errors,
+                StatusCode = HttpStatusCode.NotFound
+            });
         }
 
         public async Task<IActionResult> Register(User user)

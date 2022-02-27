@@ -5,6 +5,7 @@ using EG.IdentityManagement.Microservice.Entities.Const;
 using EG.IdentityManagement.Microservice.Entities.Identity;
 using EG.IdentityManagement.Microservice.Extensions;
 using EG.IdentityManagement.Microservice.Identity;
+using EG.IdentityManagement.Microservice.Repositories;
 using EG.IdentityManagement.Microservice.Services.Implementations;
 using EG.IdentityManagement.Microservice.Services.Interfaces;
 using EG.IdentityManagement.Microservice.Settings;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using System;
 using System.Text;
 
@@ -79,7 +81,7 @@ namespace EG.IdentityManagement.Microservice
                     ValidAudience = Configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:SecretKey"])),
                     RequireExpirationTime = true,
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.Zero,
                 };
             });
 
@@ -99,6 +101,8 @@ namespace EG.IdentityManagement.Microservice
             services.AddAutoMapper(typeof(Startup));
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddTransient<IMongoClient, MongoClient>(_ => new MongoClient("mongodb://127.0.0.1:27017/identity"));
+            services.AddScoped(typeof(IMongoRepository<>), typeof(MongoRepository<>));
 
             #endregion "Services"
         }
