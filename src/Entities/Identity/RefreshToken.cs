@@ -1,19 +1,18 @@
-﻿using Microsoft.AspNetCore.Identity;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using System;
+﻿using System;
 
 namespace EG.IdentityManagement.Microservice.Entities.Identity
 {
-    public class RefreshToken : IdentityUserToken<string>
+    public class RefreshToken : IDisposable
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { set; get; }
-
+        public string JwtId { set; get; }
+        public string Name { get; set; }
+        public string Value { get; set; }
+        public string LoginProvider { get; set; }
         public DateTime IssuedAt { set; get; }
         public DateTime ExpiresAt { set; get; }
         public bool Used { set; get; }
-        public string JwtId { set; get; }
+
+        public void Dispose()
+        { }
     }
 }

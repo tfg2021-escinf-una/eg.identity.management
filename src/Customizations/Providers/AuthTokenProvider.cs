@@ -1,11 +1,14 @@
 ﻿using EG.IdentityManagement.Microservice.Entities.Const;
+using EG.IdentityManagement.Microservice.Entities.Identity;
 using EG.IdentityManagement.Microservice.Identity;
+using EG.IdentityManagement.Microservice.Repositories;
 using EG.IdentityManagement.Microservice.Settings;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -20,14 +23,18 @@ namespace EG.IdentityManagement.Microservice.Customizations.Providers
         where TUser : User
     {
         private readonly JwtSettings _jwtSettings;
+        private readonly IMongoRepository<Role> _roleRepository;
 
         public AuthTokenProvider(IDataProtectionProvider dataProtectionProvider,
                                  IOptions<DataProtectionTokenProviderOptions> options,
                                  ILogger<DataProtectorTokenProvider<TUser>> logger,
-                                 IOptions<JwtSettings> jwtSettings)
+                                 IOptions<JwtSettings> jwtSettings,
+                                 IMongoRepository<RefreshToken> refreshRepository,
+                                 IMongoRepository<Role> roleRepository)
             : base(dataProtectionProvider, options, logger)
         {
             _jwtSettings = jwtSettings.Value ?? throw new ArgumentNullException("Values should not come as null");
+            _roleRepository = roleRepository ?? throw new ArgumentNullException("Values should not come as null");
         }
 
         //
@@ -95,13 +102,41 @@ namespace EG.IdentityManagement.Microservice.Customizations.Providers
             switch (purpose)
             {
                 case "JWT":
-                    break;
+                    SecurityToken validatedToken;
+                    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var validationParameters = GetTokenValidationParameters(securityKey);
+
+                    try
+                    {
+                        tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+                    }
+                    catch (Exception)
+                    {
+                        return Task.FromResult(false);
+                    }
+
+                    return Task.FromResult(true);
 
                 case "RefreshToken":
-                    break;
-            }
 
-            return Task.FromResult(true);
+                    if (user.RefreshToken != null)
+                    {
+                        using (var refreshToken = user.RefreshToken)
+                        {
+                            if (refreshToken.ExpiresAt.ToLocalTime() < DateTime.Now
+                                && refreshToken.Used)
+                                return Task.FromResult(false);
+
+                            return Task.FromResult(true);
+                        }
+                    }
+
+                    return Task.FromResult(false);
+
+                default:
+                    return Task.FromResult(false);
+            }
         }
 
         #region "Private Methods"
@@ -127,12 +162,22 @@ namespace EG.IdentityManagement.Microservice.Customizations.Providers
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             }.ToList();
 
-            if (manager.IsInRoleAsync(user, Constants.ApplicationRoles.Administrator.ToString()).Result)
-                claims.Add(new Claim(ClaimTypes.Role, Constants.ApplicationRoles.Administrator.ToString()));
-            else if (manager.IsInRoleAsync(user, Constants.ApplicationRoles.Moderator.ToString()).Result)
-                claims.Add(new Claim(ClaimTypes.Role, Constants.ApplicationRoles.Administrator.ToString()));
+            var systemAvailableRoles = _roleRepository.Find(_ => true)
+                                            .Result
+                                            .ToList();
+
+            if (systemAvailableRoles.Count > 0)
+            {
+                systemAvailableRoles.ForEach(item =>
+                {
+                    if (manager.IsInRoleAsync(user, item.Name).Result)
+                        claims.Add(new Claim(ClaimTypes.Role, item.Name));
+                });
+            }
             else
-                claims.Add(new Claim(ClaimTypes.Role, Constants.ApplicationRoles.StandardUser.ToString()));
+            {
+                claims.Add(new Claim(ClaimTypes.Role, Constants.ApplicationRoles.Administrator.ToString()));
+            }
 
             return new JwtSecurityToken(_jwtSettings.Issuer,
                                          _jwtSettings.Audience,
@@ -160,6 +205,22 @@ namespace EG.IdentityManagement.Microservice.Customizations.Providers
 
             return refreshToken;
         }
+
+        private TokenValidationParameters GetTokenValidationParameters(SymmetricSecurityKey securityKey)
+            => new TokenValidationParameters
+            {
+                ValidateLifetime = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidIssuer = _jwtSettings.Issuer,
+                ValidAudience = _jwtSettings.Audience,
+                IssuerSigningKey = securityKey,
+                RequireExpirationTime = true,
+                LifetimeValidator = (DateTime? notBefore,
+                                     DateTime? expires,
+                                     SecurityToken securityToken,
+                                     TokenValidationParameters validationParameters) => expires >= DateTime.UtcNow
+            };
 
         #endregion "Private Methods"
     }

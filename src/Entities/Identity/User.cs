@@ -1,10 +1,11 @@
 ﻿using AspNetCore.Identity.Mongo.Model;
+using EG.IdentityManagement.Microservice.Entities.Identity;
 using MongoDB.Bson.Serialization.Attributes;
-using System.Collections.Generic;
+using System;
 
 namespace EG.IdentityManagement.Microservice.Identity
 {
-    public class User : MongoUser<string>
+    public class User : MongoUser<string>, IDisposable
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -12,13 +13,16 @@ namespace EG.IdentityManagement.Microservice.Identity
         [BsonIgnore]
         public string Password { set; get; }
 
-        public List<string> JwtTokens { set; get; }
-        public List<string> RefreshTokens { set; get; }
+        public JwtToken JwtToken { set; get; }
+        public RefreshToken RefreshToken { set; get; }
 
         public User()
         {
-            JwtTokens = new List<string>();
-            RefreshTokens = new List<string>();
+            JwtToken = null;
+            RefreshToken = null;
         }
+
+        public void Dispose()
+        { }
     }
 }

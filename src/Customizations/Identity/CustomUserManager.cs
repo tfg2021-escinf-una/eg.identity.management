@@ -16,8 +16,6 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
     public class CustomUserManager<TUser> : UserManager<TUser>
         where TUser : User
     {
-        private readonly IMongoRepository<JwtToken> _jwtRepository;
-        private readonly IMongoRepository<RefreshToken> _refreshRepository;
         private readonly IMongoRepository<User> _userRepository;
         private readonly ILogger<UserManager<TUser>> _logger;
         private readonly JwtSettings _jwtSettings;
@@ -32,8 +30,6 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
                                  IServiceProvider services,
                                  ILogger<UserManager<TUser>> logger,
                                  IOptions<JwtSettings> jwtSettings,
-                                 IMongoRepository<JwtToken> jwtRepository,
-                                 IMongoRepository<RefreshToken> refreshRepository,
                                  IMongoRepository<User> userRepository)
            : base(store,
                   optionsAccessor,
@@ -46,9 +42,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
                   logger)
         {
             _jwtSettings = jwtSettings.Value ?? throw new ArgumentNullException("Jwt settings should not come as null");
-            _jwtRepository = jwtRepository;
-            _userRepository = userRepository;
-            _refreshRepository = refreshRepository;
+            _userRepository = userRepository ?? throw new ArgumentNullException("Repository should not come as null");
             _logger = logger;
         }
 
@@ -62,28 +56,21 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
 
             JwtToken jwtToken = new JwtToken
             {
-                Id = Guid.NewGuid().ToString(),
-                JwtId = securityToken.Id,
+                Id = securityToken.Id,
                 IssuedAt = securityToken.ValidFrom,
                 ExpiresAt = securityToken.ValidTo,
                 Value = token,
                 LoginProvider = loginProvider,
-                UserId = user.Id.ToString(),
                 Name = name
             };
 
-            if (await _jwtRepository.InsertOneAsync(jwtToken))
-            {
-                user.JwtTokens.Add(jwtToken.Id);
-                _ = await _userRepository.FindOneAndUpdateAsync(
+            user.JwtToken = jwtToken;
+            _ = await _userRepository.FindOneAndUpdateAsync(
                     Builders<User>.Filter.Where(item => item.Id == user.Id),
                     Builders<User>.Update
-                        .Set(prop => prop.JwtTokens, user.JwtTokens));
+                        .Set(prop => prop.JwtToken, user.JwtToken));
 
-                return jwtToken.Id;
-            }
-
-            return string.Empty;
+            return jwtToken.Id;
         }
 
         public async Task<string> SetRefreshTokenAsync(TUser user,
@@ -94,86 +81,70 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
         {
             RefreshToken refreshToken = new RefreshToken
             {
+                JwtId = jwtId,
                 IssuedAt = DateTime.Now,
                 ExpiresAt = DateTime.Now.AddMinutes(_jwtSettings.RefreshTokenExpiresIn),
                 Value = value,
                 Used = false,
                 LoginProvider = loginProvider,
-                UserId = user.Id.ToString(),
-                Name = name,
-                JwtId = jwtId
+                Name = name
             };
 
-            if (await _refreshRepository.InsertOneAsync(refreshToken))
-            {
-                user.RefreshTokens.Add(refreshToken.Id);
-                _ = await _userRepository.FindOneAndUpdateAsync(
-                       Builders<User>.Filter.Where(item => item.Id == user.Id),
-                       Builders<User>.Update
-                           .Set(prop => prop.RefreshTokens, user.RefreshTokens));
+            user.RefreshToken = refreshToken;
+            _ = await _userRepository.FindOneAndUpdateAsync(
+                      Builders<User>.Filter.Where(item => item.Id == user.Id),
+                      Builders<User>.Update
+                          .Set(prop => prop.RefreshToken, user.RefreshToken));
 
-                return refreshToken.Id;
-            }
-
-            return string.Empty;
+            return refreshToken.JwtId;
         }
 
-        public async Task<bool> HasUserAliveJwtToken(TUser user)
+        public Task<bool> HasUserAliveJwtToken(TUser user)
         {
-            var result = await _userRepository.FindOneLookupAsync<User, JwtToken, UserTokenLookup>(
-                "JwtTokens",
-                "_id",
-                "UserId",
-                "jwtTokens",
-                Builders<User>.Filter.Where(item => item.Id == user.Id));
-
-            foreach (var token in result.jwtTokens)
+            if (user.JwtToken != null && user.RefreshToken != null)
             {
-                if (token.ExpiresAt.ToLocalTime() > DateTime.Now)
+                using (var token = user.JwtToken)
                 {
-                    return true;
+                    if (token.ExpiresAt.ToLocalTime() > DateTime.Now)
+                    {
+                        return Task.FromResult(true);
+                    }
                 }
             }
 
-            return false;
+            return Task.FromResult(false);
         }
 
         public async Task PurgeAuthTokens(TUser user)
         {
-            if (user.JwtTokens.Count > 0)
+            if (user.JwtToken != null || user.RefreshToken != null)
             {
-                _ = await _jwtRepository.DeleteOneAsync(
-                        Builders<JwtToken>.Filter.Where(item => item.Id == user.JwtTokens[0])
-                    );
+                _ = await _userRepository.FindOneAndUpdateAsync(
+                    Builders<User>.Filter.Where(item => item.Id == user.Id),
+                    Builders<User>.Update
+                        .Set(prop => prop.JwtToken, null)
+                        .Set(prop => prop.RefreshToken, null)
+                );
+
+                user.JwtToken = null;
+                user.RefreshToken = null;
             }
-
-            if (user.RefreshTokens.Count > 0)
-            {
-                _ = await _refreshRepository.DeleteOneAsync(
-                         Builders<RefreshToken>.Filter.Where(item => item.Id == user.RefreshTokens[0])
-                    );
-            }
-
-            _ = await _userRepository.FindOneAndUpdateAsync(
-                Builders<User>.Filter.Where(item => item.Id == user.Id),
-                Builders<User>.Update
-                    .Set(prop => prop.JwtTokens, new List<string>())
-                    .Set(prop => prop.RefreshTokens, new List<string>())
-            );
-
-            user.JwtTokens.Clear();
-            user.RefreshTokens.Clear();
         }
 
         public Tuple<string, string> GetActiveAuthTokens(TUser user)
             => new Tuple<string, string>(
-                    _jwtRepository.Find(Builders<JwtToken>.Filter.Where(item => item.Id == user.JwtTokens[0])).Value,
-                    _refreshRepository.Find(Builders<RefreshToken>.Filter.Where(item => item.Id == user.RefreshTokens[0])).Value
+                    user.JwtToken?.Value,
+                    user.RefreshToken?.Value
                 );
-    }
 
-    public class UserTokenLookup : User
-    {
-        public List<JwtToken> jwtTokens { set; get; }
+        public Task<User> GetUserByJwtAsync(string jwtToken)
+            => Task.FromResult(_userRepository.Find(
+                    Builders<User>.Filter.Where(item => item.JwtToken.Value == jwtToken)
+                ));
+
+        public Task<bool> CheckAuthenticityBetweenJwtAndRefreshToken(TUser user, string jwtToken, string refreshToken)
+            => Task.FromResult(user.JwtToken.Value == jwtToken &&
+                    user.RefreshToken.Value == refreshToken &&
+                    user.RefreshToken.JwtId == user.JwtToken.Id);
     }
 }

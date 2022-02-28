@@ -12,6 +12,7 @@ namespace EG.IdentityManagement.Microservice.Entities.Mapper
         {
             CreateMap<IdentityViewModel, User>()
                 .ForMember(dest => dest.Password, act => act.MapFrom(src => src.Password))
+                .ForMember(dest => dest.Email, act => act.MapFrom(src => src.EmailAddress))
                 .ForMember(dest => dest.Id, act => act.MapFrom(src => Guid.NewGuid()))
                 .ReverseMap();
 

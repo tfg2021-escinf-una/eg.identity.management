@@ -1,16 +1,18 @@
-﻿using Microsoft.AspNetCore.Identity;
-using MongoDB.Bson.Serialization.Attributes;
-using System;
+﻿using System;
 
 namespace EG.IdentityManagement.Microservice.Entities.Identity
 {
-    public class JwtToken : IdentityUserToken<string>
+    public class JwtToken : IDisposable
     {
-        [BsonId]
         public string Id { set; get; }
-
-        public string JwtId { set; get; }
+        public string LoginProvider { get; set; }
+        public string Name { get; set; }
+        public string Value { get; set; }
         public DateTime IssuedAt { set; get; }
         public DateTime ExpiresAt { set; get; }
+
+        public void Dispose()
+        {
+        }
     }
 }

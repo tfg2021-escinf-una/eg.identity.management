@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -91,6 +93,14 @@ namespace EG.IdentityManagement.Microservice.Repositories
                               foreignField,
                               @as)
                       .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<T>> Find(Expression<Func<T, bool>> filter, FindOptions options = null)
+        {
+            var database = _mongoClient.GetDatabase(_mongoDbSettings.DatabaseName);
+            var collection = database.GetCollection<T>(_collectionName);
+            return await collection.Find(filter, options)
+                    .ToListAsync();
         }
     }
 }

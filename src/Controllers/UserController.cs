@@ -33,7 +33,7 @@ namespace EG.IdentityManagement.Microservice.Controllers
 
         [HttpPost]
         [Route("refresh")]
-        public async Task<IActionResult> Refresh()
-            => null;
+        public async Task<IActionResult> Refresh([FromBody] TokensViewModel token)
+            => await _identityService.Refresh(token.jwtToken, token.refreshToken);
     }
 }

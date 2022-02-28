@@ -9,5 +9,7 @@ namespace EG.IdentityManagement.Microservice.Services.Interfaces
         Task<IActionResult> Register(User user);
 
         Task<IActionResult> Login(string email, string password);
+
+        Task<IActionResult> Refresh(string jwtToken, string refreshToken);
     }
 }
