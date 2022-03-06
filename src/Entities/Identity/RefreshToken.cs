@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EG.IdentityManagement.Microservice.Entities.Identity
 {
+    [ExcludeFromCodeCoverage]
     public class RefreshToken : IDisposable
     {
         public string JwtId { set; get; }

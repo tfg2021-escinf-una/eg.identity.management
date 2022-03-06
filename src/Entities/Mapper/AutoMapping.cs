@@ -3,9 +3,11 @@ using EG.IdentityManagement.Microservice.Entities.Identity;
 using EG.IdentityManagement.Microservice.Entities.ViewModels;
 using EG.IdentityManagement.Microservice.Identity;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EG.IdentityManagement.Microservice.Entities.Mapper
 {
+    [ExcludeFromCodeCoverage]
     public class AutoMapping : Profile
     {
         public AutoMapping()

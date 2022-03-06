@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ using System.Threading.Tasks;
 
 namespace EG.IdentityManagement.Microservice.Customizations.Providers
 {
+    [ExcludeFromCodeCoverage]
     public class AuthTokenProvider<TUser> : DataProtectorTokenProvider<TUser>
         where TUser : User
     {

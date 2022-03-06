@@ -4,11 +4,13 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EG.IdentityManagement.Microservice.Health
 {
+    [ExcludeFromCodeCoverage]
     public class MongoHealthCheck : IHealthCheck
     {
         private readonly MongoDbSettings _mongoDbSettings;

@@ -8,11 +8,13 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 
 namespace EG.IdentityManagement.Microservice.Customizations.Identity
 {
+    [ExcludeFromCodeCoverage]
     public class CustomUserManager<TUser> : UserManager<TUser>
         where TUser : User
     {

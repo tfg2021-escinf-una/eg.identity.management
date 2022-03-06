@@ -18,10 +18,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace EG.IdentityManagement.Microservice.Extensions
 {
+    [ExcludeFromCodeCoverage]
     public static class DependencyInjectionServicesExtensions
     {
         public static IConfiguration Configuration { set; get; }

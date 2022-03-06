@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EG.IdentityManagement.Microservice.Entities.ViewModels
 {
+    [ExcludeFromCodeCoverage]
     public class IdentityViewModel
     {
         [Required]

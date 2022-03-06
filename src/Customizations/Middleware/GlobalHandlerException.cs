@@ -2,11 +2,13 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace EG.IdentityManagement.Microservice.Customizations.Middleware
 {
+    [ExcludeFromCodeCoverage]
     public class GlobalHandlerException
     {
         private readonly ILogger<GlobalHandlerException> _logger;

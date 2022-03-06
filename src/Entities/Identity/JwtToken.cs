@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EG.IdentityManagement.Microservice.Entities.Identity
 {
+    [ExcludeFromCodeCoverage]
     public class JwtToken : IDisposable
     {
         public string Id { set; get; }

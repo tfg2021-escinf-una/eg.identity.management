@@ -4,12 +4,14 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EG.IdentityManagement.Microservice.Repositories
 {
+    [ExcludeFromCodeCoverage]
     public class MongoRepository<T> : IMongoRepository<T>
     {
         private readonly MongoDbSettings _mongoDbSettings;

@@ -1,5 +1,8 @@
-﻿namespace EG.IdentityManagement.Microservice.Settings
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace EG.IdentityManagement.Microservice.Settings
 {
+    [ExcludeFromCodeCoverage]
     public class MongoDbSettings
     {
         public string DatabaseName { set; get; }
