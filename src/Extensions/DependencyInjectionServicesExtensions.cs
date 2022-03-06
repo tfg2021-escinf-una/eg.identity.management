@@ -3,6 +3,7 @@ using EG.IdentityManagement.Microservice.Customizations.Identity;
 using EG.IdentityManagement.Microservice.Customizations.Providers;
 using EG.IdentityManagement.Microservice.Entities.Const;
 using EG.IdentityManagement.Microservice.Entities.Identity;
+using EG.IdentityManagement.Microservice.Health;
 using EG.IdentityManagement.Microservice.Identity;
 using EG.IdentityManagement.Microservice.Repositories;
 using EG.IdentityManagement.Microservice.Services.Implementations;
@@ -101,6 +102,13 @@ namespace EG.IdentityManagement.Microservice.Extensions
             services.AddScoped(typeof(IMongoRepository<>), typeof(MongoRepository<>));
 
             #endregion "Services"
+
+            #region "Health Checks"
+
+            services.AddHealthChecks()
+                .AddCheck<MongoHealthCheck>("MongoHealthCheck");
+
+            #endregion
 
             return services;
         }

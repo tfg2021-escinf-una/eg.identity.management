@@ -46,7 +46,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
             _logger = logger;
         }
 
-        public async Task<string> SetJwtTokenAsync(TUser user,
+        public virtual async Task<string> SetJwtTokenAsync(TUser user,
                                                    string loginProvider,
                                                    string name,
                                                    string token)
@@ -73,7 +73,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
             return jwtToken.Id;
         }
 
-        public async Task<string> SetRefreshTokenAsync(TUser user,
+        public virtual async Task<string> SetRefreshTokenAsync(TUser user,
                                                  string loginProvider,
                                                  string name,
                                                  string jwtId,
@@ -99,7 +99,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
             return refreshToken.JwtId;
         }
 
-        public Task<bool> HasUserAliveJwtToken(TUser user)
+        public virtual Task<bool> HasUserAliveJwtToken(TUser user)
         {
             if (user.JwtToken != null && user.RefreshToken != null)
             {
@@ -115,7 +115,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
             return Task.FromResult(false);
         }
 
-        public async Task PurgeAuthTokens(TUser user)
+        public virtual async Task PurgeAuthTokens(TUser user)
         {
             if (user.JwtToken != null || user.RefreshToken != null)
             {
@@ -131,18 +131,18 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
             }
         }
 
-        public Tuple<string, string> GetActiveAuthTokens(TUser user)
+        public virtual Tuple<string, string> GetActiveAuthTokens(TUser user)
             => new Tuple<string, string>(
                     user.JwtToken?.Value,
                     user.RefreshToken?.Value
                 );
 
-        public Task<User> GetUserByJwtAsync(string jwtToken)
+        public virtual Task<User> GetUserByJwtAsync(string jwtToken)
             => Task.FromResult(_userRepository.Find(
                     Builders<User>.Filter.Where(item => item.JwtToken.Value == jwtToken)
                 ));
 
-        public Task<bool> CheckAuthenticityBetweenJwtAndRefreshToken(TUser user, string jwtToken, string refreshToken)
+        public virtual Task<bool> CheckAuthenticityBetweenJwtAndRefreshToken(TUser user, string jwtToken, string refreshToken)
             => Task.FromResult(user.JwtToken.Value == jwtToken &&
                     user.RefreshToken.Value == refreshToken &&
                     user.RefreshToken.JwtId == user.JwtToken.Id);

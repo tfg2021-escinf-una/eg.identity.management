@@ -133,7 +133,7 @@ namespace EG.IdentityManagement.Microservice.Services.Implementations
                 {
                     Errors = errors,
                     Data = data,
-                    StatusCode = HttpStatusCode.Created
+                    StatusCode = HttpStatusCode.BadRequest
                 });
             }
 
@@ -181,6 +181,8 @@ namespace EG.IdentityManagement.Microservice.Services.Implementations
 
                         data.jwtToken = jwtToken;
                         data.refreshToken = refreshToken;
+                        data.expiresat = user.JwtToken.ExpiresAt
+                            .ToLocalTime();
 
                         return new OkObjectResult(new GenericResponse
                         {
@@ -207,16 +209,19 @@ namespace EG.IdentityManagement.Microservice.Services.Implementations
 
             RefreshTokenExpired:
                 errors.Add(new { Description = "Refresh Token is expired" });
+                goto FinalReturn;
 
             JwtAndRefreshAreNotMatching:
                 errors.Add(new { Description = "Jwt and Refresh tokens are not matching for the provided user" });
+                goto FinalReturn;    
 
-            return new BadRequestObjectResult(new GenericResponse
-            {
-                Data = new object(),
-                Errors = errors,
-                StatusCode = HttpStatusCode.NotFound
-            });
+            FinalReturn:
+                return new BadRequestObjectResult(new GenericResponse
+                {
+                    Data = new object(),
+                    Errors = errors,
+                    StatusCode = HttpStatusCode.BadRequest
+                });
         }
     }
 }
