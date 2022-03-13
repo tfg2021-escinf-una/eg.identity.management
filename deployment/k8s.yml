@@ -1,33 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eg-identity-management
+data:
+  # property-like keys; each key maps to a simple value
+  MongoConfig__DatabaseName: identity
+  MongoConfig__User: edlobo98
+  MongoConfig__Password: wH9alYK4zDGlrYyN
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eg.identity.management
+  name: eg-identity-management
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: eg.identity.management
+      app: eg-identity-management
   template:
     metadata:
       labels:
-        app: eg.identitymanagement
+        app: eg-identity-management
     spec:
       containers:
       - image: inftfg2021/eg.identity.management:latest
-        name: eg.identity.management
-
+        name: eg-identity-management
+        env: 
+          - name: MongoConfig__DatabaseName
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: MongoConfig__DatabaseName
+          - name: MongoConfig__User
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: MongoConfig__User
+          - name: MongoConfig__Password
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: MongoConfig__Password
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: eg.identity.management
+  name: eg-identity-management
   annotations:
     dev.okteto.com/auto-ingress: "true"
 spec:
   type: ClusterIP  
   ports:
-  - name: "eg.identity.management"
-    port: 8080
+  - name: "eg-identity-management"
+    port: 8081
   selector:
-    app: eg.identity.management
+    app: eg-identity-management
+---
+
