@@ -3,17 +3,27 @@ kind: ConfigMap
 metadata:
   name: eg-identity-management
 data:
-  # property-like keys; each key maps to a simple value
+  # Mongo Configuration
+  # TO DO: Pass this values using Okteto Secrets.
   MongoConfig__DatabaseName: identity
   MongoConfig__User: edlobo98
   MongoConfig__Password: wH9alYK4zDGlrYyN
+
+  # JWT Token Configuration
+  # TO DO: Pass this values using Okteto Secrets.
+  Jwt__SecretKey: tfgEDLSLGRD2021
+  Jwt__ExpiresIn: "10"
+  Jwt__RefreshTokenExpiresIn: "60"
+  Jwt__Issuer: eg.identity.management
+  Jwt__Audience: eg.identity.management
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: eg-identity-management
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: eg-identity-management
@@ -26,6 +36,9 @@ spec:
       - image: inftfg2021/eg.identity.management:latest
         name: eg-identity-management
         env: 
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Development
+
           - name: MongoConfig__DatabaseName
             valueFrom:
               configMapKeyRef:
@@ -41,6 +54,32 @@ spec:
               configMapKeyRef:
                 name: eg-identity-management
                 key: MongoConfig__Password
+          - name: Jwt__SecretKey
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: Jwt__SecretKey
+          - name: Jwt__ExpiresIn
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: Jwt__ExpiresIn
+          - name: Jwt__RefreshTokenExpiresIn
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: Jwt__RefreshTokenExpiresIn
+          - name: Jwt__Audience
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: Jwt__Audience
+          - name: Jwt__Issuer
+            valueFrom:
+              configMapKeyRef:
+                name: eg-identity-management
+                key: Jwt__Issuer
+
 ---
 apiVersion: v1
 kind: Service
@@ -55,5 +94,4 @@ spec:
     port: 8081
   selector:
     app: eg-identity-management
----
 
