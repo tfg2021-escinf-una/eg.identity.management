@@ -85,7 +85,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Identity
             {
                 JwtId = jwtId,
                 IssuedAt = DateTime.Now,
-                ExpiresAt = DateTime.Now.AddMinutes(_jwtSettings.RefreshTokenExpiresIn),
+                ExpiresAt = DateTime.Now.AddMinutes(int.Parse(_jwtSettings.RefreshTokenExpiresIn)),
                 Value = value,
                 Used = false,
                 LoginProvider = loginProvider,
