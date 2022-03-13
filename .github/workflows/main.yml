@@ -3,14 +3,13 @@ name: CI
 on: [push]
 
 env:
-   DEV_TAG: dev- 
-   PROD_TAG: ""
+   tag: dev-${{ github.sha }} 
 
 jobs:
   development-build:
     runs-on: ubuntu-latest
     steps:
-    - name: Login
+    - name: Verifying Docker Credentials
       uses: actions-hub/docker/login@master
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USER }}
@@ -19,5 +18,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build Docker Image
       run: |
-        tag=dev-$(date +%s)
-        docker build -t ${{ secrets.DOCKER_USER }}/eg.identity.management:$tag -f ./deployment/Dockerfile .
+        docker build -t ${{ secrets.DOCKER_USER }}/eg.identity.management:${{ env.tag }} -f ./deployment/Dockerfile .
+
+    - name: Publish Docker Image
+      run: |
+        echo ${{ secrets.DOCKER_PASS }} | docker login --username ${{ secrets.DOCKER_USER }} --password-stdin
+        docker push ${{ secrets.DOCKER_USER }}/eg.identity.management:${{ env.tag }}
