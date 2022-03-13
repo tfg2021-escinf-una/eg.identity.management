@@ -1,0 +1,23 @@
+name: CI
+
+on: [push]
+
+env:
+   DEV_TAG: dev- 
+   PROD_TAG: ""
+
+jobs:
+  development-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login
+      uses: actions-hub/docker/login@master
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASS }}
+    
+    - uses: actions/checkout@v2
+    - name: Build Docker Image
+      run: |
+        tag=dev-$(date +%s)
+        docker build -t ${{ secrets.DOCKER_USER }}/eg.identity.management:$tag -f ./deployment/Dockerfile .

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eg.identity.management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eg.identity.management
+  template:
+    metadata:
+      labels:
+        app: eg.identitymanagement
+    spec:
+      containers:
+      - image: inftfg2021/eg.identity.management:latest
+        name: eg.identity.management
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: eg.identity.management
+  annotations:
+    dev.okteto.com/auto-ingress: "true"
+spec:
+  type: ClusterIP  
+  ports:
+  - name: "eg.identity.management"
+    port: 8080
+  selector:
+    app: eg.identity.management
