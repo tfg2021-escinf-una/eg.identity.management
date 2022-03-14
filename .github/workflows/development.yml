@@ -1,12 +1,12 @@
-name: Build and Deploy in Production Namespace
+name: Build and Deploy in DEV Namespace
 
 on: 
  push:
   branches:
-  - main
+  - development
     
 env:
-   tag: ${{ github.sha }} 
+   tag: dev-${{ github.sha }} 
 
 jobs:
   build:
@@ -40,16 +40,7 @@ jobs:
       env:
         KUBECONFIG: ${{ steps.namespace.outputs.kubeconfig }}
       with:
-        namespace: tfg2021-escinf-una
-        manifest: ./deployment/prod-k8s.yml
+        namespace: dev-tfg2021-escinf-una
+        manifest: ./deployment/k8s.yml
         tag: ${{ secrets.DOCKER_USER }}/eg.identity.management:${{ env.tag }}
         waitOn: deployment/eg-identity-management
-  tagging:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Tag and update the repository
-      - uses: actions/checkout@v2
-      - uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ env.tag }}
-          message: "Latest release"

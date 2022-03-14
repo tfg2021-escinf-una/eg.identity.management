@@ -1,0 +1,23 @@
+name: .NET Build and Test
+
+on:
+  push:
+    branches-ignore:
+     - main
+     - development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check if the application compiles and run the tests.
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore ./src/EG.IdentityManagement.Microservice.csproj
+    - name: Build
+      run: dotnet build ./src/EG.IdentityManagement.Microservice.csproj --no-restore
+    - name: Test
+      run: dotnet test ./src/EG.IdentityManagement.Microservice.csproj --no-build --verbosity normal
