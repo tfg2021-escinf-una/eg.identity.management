@@ -153,7 +153,7 @@ namespace EG.IdentityManagement.Microservice.Customizations.Providers
                                                           UserManager<TUser> manager)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-            var expiresIn = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresIn);
+            var expiresIn = DateTime.UtcNow.AddMinutes(int.Parse(_jwtSettings.ExpiresIn));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
