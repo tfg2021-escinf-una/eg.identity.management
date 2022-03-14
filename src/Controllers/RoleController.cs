@@ -2,12 +2,14 @@
 using EG.IdentityManagement.Microservice.Entities.Identity;
 using EG.IdentityManagement.Microservice.Entities.ViewModels;
 using EG.IdentityManagement.Microservice.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
 namespace EG.IdentityManagement.Microservice.Controllers
 {
+    [Authorize(Roles = "Administrator")]
     [Route("api/[controller]")]
     [ApiController]
     public class RoleController : ControllerBase
