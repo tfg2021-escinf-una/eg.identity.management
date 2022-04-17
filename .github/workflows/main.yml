@@ -3,7 +3,7 @@ name: Build and Deploy in PROD Namespace
 on: 
   push:
     branches:
-        - main
+      - main
 
 jobs:
   build:

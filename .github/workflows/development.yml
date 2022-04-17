@@ -1,9 +1,9 @@
 name: Build and Deploy in DEV Namespace
 
 on: 
- push:
-  branches:
-    - feature/integrating_okteto_pipeline
+  push:
+    branches:
+      - development
 
 jobs:
   build:
