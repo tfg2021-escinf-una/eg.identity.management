@@ -14,13 +14,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Build Applications Within the Repository.
-      uses: actions/setup-node@v3
-      with:
-        node-version: '14'
-    - run: npm install
-    - run: npm run build
-
     - name: Application Versioning
       id: versioning
       uses: paulhatch/semantic-version@v4.0.2
