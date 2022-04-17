@@ -3,7 +3,7 @@ name: Build and Deploy in DEV Namespace
 on: 
  push:
   branches:
-    - development
+    - feature/integrating_okteto_pipeline
 
 jobs:
   build:
