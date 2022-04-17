@@ -1,0 +1,3 @@
+deploy: 
+  - envsubst < ./k8s/k8s.yml > kube8s.yml
+  - kubectl apply -f kube8s.yml
