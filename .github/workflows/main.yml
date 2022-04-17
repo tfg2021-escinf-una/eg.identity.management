@@ -1,9 +1,9 @@
 name: Build and Deploy in PROD Namespace
 
 on: 
- push:
-  branches:
-    - main
+  push:
+    branches:
+      - main
 
 jobs:
   build:

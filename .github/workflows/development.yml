@@ -1,9 +1,9 @@
 name: Build and Deploy in DEV Namespace
 
 on: 
- push:
-  branches:
-    - development
+  push:
+    branches:
+      - development
 
 jobs:
   build:
