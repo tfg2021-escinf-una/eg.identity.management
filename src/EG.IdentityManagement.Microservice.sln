@@ -10,7 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", "{12E7282C-0EB6-4ADA-959C-B18F410F9CBB}"
 	ProjectSection(SolutionItems) = preProject
 		..\deployment\Dockerfile = ..\deployment\Dockerfile
-		okteto-pipeline.yml = okteto-pipeline.yml
+		..\deployment\okteto-pipeline.yml = ..\deployment\okteto-pipeline.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{68E64458-E492-4CAD-9CD1-2FD8E8BBA8E2}"
