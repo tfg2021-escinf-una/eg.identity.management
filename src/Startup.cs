@@ -23,6 +23,7 @@ namespace EG.IdentityManagement.Microservice
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddControllers();
             services.ConfigureApplicationServices();
         }
@@ -39,6 +40,12 @@ namespace EG.IdentityManagement.Microservice
 
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EG.IdentityManagement.Microservice v1"));
+
+            app.UseCors(x => x
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .SetIsOriginAllowed(origin => true) // allow any origin
+               .AllowCredentials()); // allow credentials
 
             app.UseHttpsRedirection();
 
