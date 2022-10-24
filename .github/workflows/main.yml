@@ -21,7 +21,7 @@ jobs:
         tag_prefix: "v"
         major_pattern: "(MAJOR)"
         minor_pattern: "(MINOR)"
-        format: "${major}.${minor}.${patch}-prerelease${increment}"
+        format: "${major}.${minor}.${patch}"
         namespace: ''
         bump_each_commit: true
         search_commit_body: true
@@ -72,9 +72,13 @@ jobs:
     needs: [build, deploy]
     runs-on: ubuntu-latest
     steps:
-      - name: Create Tag and update the repository
-      - uses: actions/checkout@v2
-      - uses: rickstaa/action-create-tag@v1
+      - name: Checkout branch
+        uses: actions/checkout@v2
+        with:
+            fetch-depth: 0
+
+      - name: "Tagging repository"
+        uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ needs.build.outputs.version_tag }}
           message: "Latest release deployed on PROD"

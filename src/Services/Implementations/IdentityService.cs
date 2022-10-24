@@ -31,11 +31,11 @@ namespace EG.IdentityManagement.Microservice.Services.Implementations
         {
             dynamic data = new ExpandoObject();
             var errors = new List<object>();
-            string jwtToken = string.Empty;
-            string refreshToken = string.Empty;
-
             using (var user = await _userManager.FindByEmailAsync(email))
             {
+                string jwtToken = string.Empty;
+                string refreshToken = string.Empty;
+
                 if (user == null)
                     goto UserNotFound;
 
