@@ -105,4 +105,4 @@ spec:
       - backend:
           serviceName: eg-identity-management-service
           servicePort: 8081
-        path: /
+        path: /identity/
