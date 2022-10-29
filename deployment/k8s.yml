@@ -79,12 +79,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: eg-identity-management
+  name: eg-identity-management-service
+  labels:
+    app: eg-identity-management
 spec:
   type: ClusterIP  
   ports:
-  - name: eg-identity-management
     port: 8081
+    protocol: TCP
+    targetPort: 8081
   selector:
     app: eg-identity-management
 
@@ -94,12 +97,12 @@ kind: Ingress
 metadata:
   annotations:
     dev.okteto.com/generate-host: "true"
-  name: eg-identity-management
+  name: eg-identity-management-ingress
 spec:
   rules:
   - http:
       paths:
       - backend:
-          serviceName: eg-identity-management
+          serviceName: eg-identity-management-service
           servicePort: 8081
-        path: /identity
+        path: /
