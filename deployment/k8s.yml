@@ -12,6 +12,7 @@ stringData:
   JwtRefreshTokenExpiresIn: "$JwtRefreshExpiresIn"
   JwtIssuer: $JwtIssuer
   JwtAudience: $JwtAudience
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -73,17 +74,32 @@ spec:
               secretKeyRef:
                 name: appsecrets
                 key: JwtIssuer
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: eg-identity-management
-  annotations:
-    dev.okteto.com/auto-ingress: "true"
 spec:
   type: ClusterIP  
   ports:
-  - name: "eg-identity-management"
+  - name: eg-identity-management
     port: 8081
   selector:
     app: eg-identity-management
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    dev.okteto.com/generate-host: "true"
+  name: eg-identity-management
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: eg-identity-management
+          servicePort: 8081
+        path: /identity
