@@ -1,1 +1,1 @@
-# eg.identity.management
+# Identity Management API
